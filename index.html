@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>encrypt & decrypt</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: var(--light-color);
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        
+        h1, h2, h3 {
+            color: var(--primary-color);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--accent-color);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s ease;
+        }
+        
+        .tab:hover {
+            background-color: #e9e9e9;
+        }
+        
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            background-color: white;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        select, input[type="text"], input[type="number"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: var(--dark-color);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .result-container {
+            margin-top: 20px;
+        }
+        
+        .result-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .result-box {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 50px;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .algorithm-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid var(--accent-color);
+            margin-bottom: 20px;
+        }
+        
+        .settings-panel {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+        
+        .flex-container {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .flex-item {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .flex-container {
+                flex-direction: column;
+            }
+        }
+        
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
+        
+        .history-item:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .copy-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Alat Enkripsi/Dekripsi Lengkap</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('encrypt')">Enkripsi</div>
+            <div class="tab" onclick="switchTab('decrypt')">Dekripsi</div>
+            <div class="tab" onclick="switchTab('algorithms')">Algoritma</div>
+            <div class="tab" onclick="switchTab('history')">Riwayat</div>
+            <div class="tab" onclick="switchTab('settings')">Pengaturan</div>
+        </div>
+        
+        <!-- Tab Enkripsi -->
+        <div id="encrypt-tab" class="tab-content active">
+            <div class="settings-panel">
+                <div class="form-group">
+                    <label for="encrypt-algorithm">Pilih Algoritma:</label>
+                    <select id="encrypt-algorithm">
+                        <option value="caesar">Caesar Cipher</option>
+                        <option value="vigenere">Vigenère Cipher</option>
+                        <option value="xor">XOR Cipher</option>
+                        <option value="base64">Base64</option>
+                        <option value="aes">AES (Advanced Encryption Standard)</option>
+                    </select>
+                </div>
+                
+                <div id="encrypt-options">
+                    <!-- Opsi akan ditampilkan berdasarkan algoritma yang dipilih -->
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="encrypt-input">Teks yang akan dienkripsi:</label>
+                <textarea id="encrypt-input" placeholder="Masukkan teks yang ingin dienkripsi..."></textarea>
+            </div>
+            
+            <button class="btn btn-success" onclick="encryptText()">Enkripsi</button>
+            <button class="btn" onclick="clearEncrypt()">Bersihkan</button>
+            
+            <div class="result-container">
+                <div class="result-label">Hasil Enkripsi:</div>
+                <div id="encrypt-result" class="result-box"></div>
+                <button class="copy-btn" onclick="copyResult('encrypt-result')">Salin</button>
+            </div>
+        </div>
+        
+        <!-- Tab Dekripsi -->
+        <div id="decrypt-tab" class="tab-content">
+            <div class="settings-panel">
+                <div class="form-group">
+                    <label for="decrypt-algorithm">Pilih Algoritma:</label>
+                    <select id="decrypt-algorithm">
+                        <option value="caesar">Caesar Cipher</option>
+                        <option value="vigenere">Vigenère Cipher</option>
+                        <option value="xor">XOR Cipher</option>
+                        <option value="base64">Base64</option>
+                        <option value="aes">AES (Advanced Encryption Standard)</option>
+                    </select>
+                </div>
+                
+                <div id="decrypt-options">
+                    <!-- Opsi akan ditampilkan berdasarkan algoritma yang dipilih -->
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="decrypt-input">Teks yang akan didekripsi:</label>
+                <textarea id="decrypt-input" placeholder="Masukkan teks yang ingin didekripsi..."></textarea>
+            </div>
+            
+            <button class="btn btn-success" onclick="decryptText()">Dekripsi</button>
+            <button class="btn" onclick="clearDecrypt()">Bersihkan</button>
+            
+            <div class="result-container">
+                <div class="result-label">Hasil Dekripsi:</div>
+                <div id="decrypt-result" class="result-box"></div>
+                <button class="copy-btn" onclick="copyResult('decrypt-result')">Salin</button>
+            </div>
+        </div>
+        
+        <!-- Tab Algoritma -->
+        <div id="algorithms-tab" class="tab-content">
+            <h2>Informasi Algoritma</h2>
+            
+            <div class="algorithm-info" id="caesar-info">
+                <h3>Caesar Cipher</h3>
+                <p>Algoritma substitusi sederhana yang menggeser setiap huruf dalam alfabet dengan jumlah tertentu.</p>
+                <p><strong>Kekuatan:</strong> Sangat lemah, mudah dipecahkan dengan analisis frekuensi.</p>
+                <p><strong>Penggunaan:</strong> Pembelajaran dasar kriptografi.</p>
+            </div>
+            
+            <div class="algorithm-info" id="vigenere-info">
+                <h3>Vigenère Cipher</h3>
+                <p>Pengembangan dari Caesar Cipher yang menggunakan kata kunci untuk menentukan besarnya pergeseran.</p>
+                <p><strong>Kekuatan:</strong> Lebih kuat dari Caesar, tapi masih bisa dipecahkan dengan analisis statistik.</p>
+                <p><strong>Penggunaan:</strong> Pembelajaran kriptografi klasik.</p>
+            </div>
+            
+            <div class="algorithm-info" id="xor-info">
+                <h3>XOR Cipher</h3>
+                <p>Algoritma yang menggunakan operasi XOR biner antara teks dan kunci.</p>
+                <p><strong>Kekuatan:</strong> Kuat jika kunci sepanjang pesan dan hanya digunakan sekali.</p>
+                <p><strong>Penggunaan:</strong> Dasar dalam banyak algoritma modern.</p>
+            </div>
+            
+            <div class="algorithm-info" id="base64-info">
+                <h3>Base64</h3>
+                <p>Skema pengkodean biner-ke-teks yang merepresentasikan data biner dalam format ASCII.</p>
+                <p><strong>Kekuatan:</strong> Bukan enkripsi, hanya pengkodean.</p>
+                <p><strong>Penggunaan:</strong> Mengirim data biner melalui media yang hanya mendukung teks.</p>
+            </div>
+            
+            <div class="algorithm-info" id="aes-info">
+                <h3>AES (Advanced Encryption Standard)</h3>
+                <p>Algoritma enkripsi simetris yang menjadi standar pemerintah AS.</p>
+                <p><strong>Kekuatan:</strong> Sangat kuat, digunakan secara luas di seluruh dunia.</p>
+                <p><strong>Penggunaan:</strong> Enkripsi file, komunikasi aman, SSL/TLS, dll.</p>
+            </div>
+        </div>
+        
+        <!-- Tab Riwayat -->
+        <div id="history-tab" class="tab-content">
+            <h2>Riwayat Enkripsi/Dekripsi</h2>
+            <button class="btn btn-danger" onclick="clearHistory()">Hapus Riwayat</button>
+            <div id="history-list" style="margin-top: 20px;">
+                <!-- Daftar riwayat akan ditampilkan di sini -->
+            </div>
+        </div>
+        
+        <!-- Tab Pengaturan -->
+        <div id="settings-tab" class="tab-content">
+            <h2>Pengaturan</h2>
+            
+            <div class="form-group">
+                <label for="theme-select">Tema:</label>
+                <select id="theme-select" class="form-control">
+                    <option value="light">Terang</option>
+                    <option value="dark">Gelap</option>
+                    <option value="blue">Biru</option>
+                    <option value="green">Hijau</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="save-history" checked> Simpan riwayat
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="auto-copy"> Salin otomatis hasil enkripsi/dekripsi
+                </label>
+            </div>
+            
+            <button class="btn btn-success" onclick="saveSettings()">Simpan Pengaturan</button>
+        </div>
+    </div>
+
+    <script>
+        // Variabel global
+        let history = JSON.parse(localStorage.getItem('encryptionHistory')) || [];
+        let settings = JSON.parse(localStorage.getItem('appSettings')) || {
+            theme: 'light',
+            saveHistory: true,
+            autoCopy: false
+        };
+        
+        // Inisialisasi saat halaman dimuat
+        window.onload = function() {
+            updateAlgorithmOptions();
+            loadSettings();
+            renderHistory();
+            
+            // Event listener untuk perubahan algoritma
+            document.getElementById('encrypt-algorithm').addEventListener('change', updateEncryptOptions);
+            document.getElementById('decrypt-algorithm').addEventListener('change', updateDecryptOptions);
+            
+            // Terapkan tema
+            applyTheme(settings.theme);
+        };
+        
+        // Fungsi untuk beralih tab
+        function switchTab(tabName) {
+            // Sembunyikan semua tab konten
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Nonaktifkan semua tab
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Aktifkan tab yang dipilih
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+        }
+        
+        // Fungsi untuk memperbarui opsi berdasarkan algoritma yang dipilih
+        function updateAlgorithmOptions() {
+            updateEncryptOptions();
+            updateDecryptOptions();
+        }
+        
+        function updateEncryptOptions() {
+            const algorithm = document.getElementById('encrypt-algorithm').value;
+            const optionsDiv = document.getElementById('encrypt-options');
+            
+            let html = '';
+            
+            switch(algorithm) {
+                case 'caesar':
+                    html = `
+                        <div class="form-group">
+                            <label for="caesar-shift">Pergeseran (shift):</label>
+                            <input type="number" id="caesar-shift" min="1" max="25" value="3">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'vigenere':
+                    html = `
+                        <div class="form-group">
+                            <label for="vigenere-key">Kata Kunci:</label>
+                            <input type="text" id="vigenere-key" placeholder="Masukkan kata kunci">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'xor':
+                    html = `
+                        <div class="form-group">
+                            <label for="xor-key">Kunci (1 karakter):</label>
+                            <input type="text" id="xor-key" maxlength="1" value="X">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'aes':
+                    html = `
+                        <div class="form-group">
+                            <label for="aes-key">Kunci AES (16/24/32 karakter):</label>
+                            <input type="password" id="aes-key" placeholder="Masukkan kunci AES">
+                        </div>
+                        <div class="form-group">
+                            <label for="aes-iv">IV (16 karakter):</label>
+                            <input type="text" id="aes-iv" placeholder="Masukkan IV (opsional)">
+                        </div>
+                    `;
+                    break;
+            }
+            
+            optionsDiv.innerHTML = html;
+        }
+        
+        function updateDecryptOptions() {
+            const algorithm = document.getElementById('decrypt-algorithm').value;
+            const optionsDiv = document.getElementById('decrypt-options');
+            
+            let html = '';
+            
+            switch(algorithm) {
+                case 'caesar':
+                    html = `
+                        <div class="form-group">
+                            <label for="decrypt-caesar-shift">Pergeseran (shift):</label>
+                            <input type="number" id="decrypt-caesar-shift" min="1" max="25" value="3">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'vigenere':
+                    html = `
+                        <div class="form-group">
+                            <label for="decrypt-vigenere-key">Kata Kunci:</label>
+                            <input type="text" id="decrypt-vigenere-key" placeholder="Masukkan kata kunci">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'xor':
+                    html = `
+                        <div class="form-group">
+                            <label for="decrypt-xor-key">Kunci (1 karakter):</label>
+                            <input type="text" id="decrypt-xor-key" maxlength="1" value="X">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'aes':
+                    html = `
+                        <div class="form-group">
+                            <label for="decrypt-aes-key">Kunci AES (16/24/32 karakter):</label>
+                            <input type="password" id="decrypt-aes-key" placeholder="Masukkan kunci AES">
+                        </div>
+                        <div class="form-group">
+                            <label for="decrypt-aes-iv">IV (16 karakter):</label>
+                            <input type="text" id="decrypt-aes-iv" placeholder="Masukkan IV (opsional)">
+                        </div>
+                    `;
+                    break;
+            }
+            
+            optionsDiv.innerHTML = html;
+        }
+        
+        // Fungsi enkripsi
+        function encryptText() {
+            const algorithm = document.getElementById('encrypt-algorithm').value;
+            const inputText = document.getElementById('encrypt-input').value;
+            let result = '';
+            
+            try {
+                switch(algorithm) {
+                    case 'caesar':
+                        const shift = parseInt(document.getElementById('caesar-shift').value);
+                        result = caesarCipher(inputText, shift);
+                        break;
+                        
+                    case 'vigenere':
+                        const key = document.getElementById('vigenere-key').value;
+                        result = vigenereCipher(inputText, key, true);
+                        break;
+                        
+                    case 'xor':
+                        const xorKey = document.getElementById('xor-key').value.charCodeAt(0);
+                        result = xorCipher(inputText, xorKey);
+                        break;
+                        
+                    case 'base64':
+                        result = btoa(unescape(encodeURIComponent(inputText)));
+                        break;
+                        
+                    case 'aes':
+                        const aesKey = document.getElementById('aes-key').value;
+                        const aesIv = document.getElementById('aes-iv').value || undefined;
+                        result = aesEncrypt(inputText, aesKey, aesIv);
+                        break;
+                        
+                    default:
+                        result = 'Algoritma tidak dikenali';
+                }
+                
+                document.getElementById('encrypt-result').textContent = result;
+                
+                // Tambahkan ke riwayat jika pengaturan mengizinkan
+                if (settings.saveHistory) {
+                    addToHistory({
+                        type: 'encrypt',
+                        algorithm: algorithm,
+                        input: inputText,
+                        output: result,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+                
+                // Salin otomatis jika diaktifkan
+                if (settings.autoCopy) {
+                    copyResult('encrypt-result');
+                }
+                
+            } catch (error) {
+                document.getElementById('encrypt-result').textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        // Fungsi dekripsi
+        function decryptText() {
+            const algorithm = document.getElementById('decrypt-algorithm').value;
+            const inputText = document.getElementById('decrypt-input').value;
+            let result = '';
+            
+            try {
+                switch(algorithm) {
+                    case 'caesar':
+                        const shift = parseInt(document.getElementById('decrypt-caesar-shift').value);
+                        result = caesarCipher(inputText, -shift);
+                        break;
+                        
+                    case 'vigenere':
+                        const key = document.getElementById('decrypt-vigenere-key').value;
+                        result = vigenereCipher(inputText, key, false);
+                        break;
+                        
+                    case 'xor':
+                        const xorKey = document.getElementById('decrypt-xor-key').value.charCodeAt(0);
+                        result = xorCipher(inputText, xorKey);
+                        break;
+                        
+                    case 'base64':
+                        result = decodeURIComponent(escape(atob(inputText)));
+                        break;
+                        
+                    case 'aes':
+                        const aesKey = document.getElementById('decrypt-aes-key').value;
+                        const aesIv = document.getElementById('decrypt-aes-iv').value || undefined;
+                        result = aesDecrypt(inputText, aesKey, aesIv);
+                        break;
+                        
+                    default:
+                        result = 'Algoritma tidak dikenali';
+                }
+                
+                document.getElementById('decrypt-result').textContent = result;
+                
+                // Tambahkan ke riwayat jika pengaturan mengizinkan
+                if (settings.saveHistory) {
+                    addToHistory({
+                        type: 'decrypt',
+                        algorithm: algorithm,
+                        input: inputText,
+                        output: result,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+                
+                // Salin otomatis jika diaktifkan
+                if (settings.autoCopy) {
+                    copyResult('decrypt-result');
+                }
+                
+            } catch (error) {
+                document.getElementById('decrypt-result').textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        // Algoritma Caesar Cipher
+        function caesarCipher(text, shift) {
+            shift = shift % 26;
+            return text.split('').map(char => {
+                let charCode = char.charCodeAt(0);
+                
+                // Huruf besar (A-Z)
+                if (charCode >= 65 && charCode <= 90) {
+                    charCode = ((charCode - 65 + shift + 26) % 26) + 65;
+                } 
+                // Huruf kecil (a-z)
+                else if (charCode >= 97 && charCode <= 122) {
+                    charCode = ((charCode - 97 + shift + 26) % 26) + 97;
+                }
+                // Angka (0-9)
+                else if (charCode >= 48 && charCode <= 57) {
+                    charCode = ((charCode - 48 + shift + 10) % 10) + 48;
+                }
+                
+                return String.fromCharCode(charCode);
+            }).join('');
+        }
+        
+        // Algoritma Vigenère Cipher
+        function vigenereCipher(text, key, encrypt) {
+            key = key.toUpperCase().replace(/[^A-Z]/g, '');
+            if (key.length === 0) throw new Error('Kunci tidak valid');
+            
+            let keyIndex = 0;
+            return text.split('').map(char => {
+                const charCode = char.charCodeAt(0);
+                let shift;
+                
+                // Huruf besar (A-Z)
+                if (charCode >= 65 && charCode <= 90) {
+                    shift = key.charCodeAt(keyIndex % key.length) - 65;
+                    if (!encrypt) shift = -shift;
+                    keyIndex++;
+                    return String.fromCharCode(((charCode - 65 + shift + 26) % 26) + 65);
+                } 
+                // Huruf kecil (a-z)
+                else if (charCode >= 97 && charCode <= 122) {
+                    shift = key.charCodeAt(keyIndex % key.length) - 65;
+                    if (!encrypt) shift = -shift;
+                    keyIndex++;
+                    return String.fromCharCode(((charCode - 97 + shift + 26) % 26) + 97);
+                }
+                
+                return char;
+            }).join('');
+        }
+        
+        // Algoritma XOR Cipher
+        function xorCipher(text, key) {
+            return text.split('').map(char => {
+                return String.fromCharCode(char.charCodeAt(0) ^ key);
+            }).join('');
+        }
+        
+        // Algoritma AES (menggunakan Web Crypto API)
+        async function aesEncrypt(text, key, iv) {
+            if (!text || !key) throw new Error('Teks dan kunci diperlukan');
+            
+            // Pastikan kunci memiliki panjang yang benar (16, 24, atau 32 karakter)
+            if (![16, 24, 32].includes(key.length)) {
+                throw new Error('Kunci AES harus 16, 24, atau 32 karakter');
+            }
+            
+            // Konversi kunci dan IV ke ArrayBuffer
+            const encoder = new TextEncoder();
+            const keyData = encoder.encode(key);
+            const ivData = iv ? encoder.encode(iv) : window.crypto.getRandomValues(new Uint8Array(16));
+            
+            // Import kunci
+            const cryptoKey = await window.crypto.subtle.importKey(
+                'raw',
+                keyData,
+                { name: 'AES-CBC' },
+                false,
+                ['encrypt']
+            );
+            
+            // Enkripsi data
+            const encrypted = await window.crypto.subtle.encrypt(
+                {
+                    name: 'AES-CBC',
+                    iv: ivData
+                },
+                cryptoKey,
+                encoder.encode(text)
+            );
+            
+            // Gabungkan IV dan data terenkripsi, lalu konversi ke Base64
+            const result = new Uint8Array(ivData.length + encrypted.byteLength);
+            result.set(ivData, 0);
+            result.set(new Uint8Array(encrypted), ivData.length);
+            
+            return arrayBufferToBase64(result.buffer);
+        }
+        
+        async function aesDecrypt(encryptedText, key) {
+            if (!encryptedText || !key) throw new Error('Teks terenkripsi dan kunci diperlukan');
+            
+            // Pastikan kunci memiliki panjang yang benar (16, 24, atau 32 karakter)
+            if (![16, 24, 32].includes(key.length)) {
+                throw new Error('Kunci AES harus 16, 24, atau 32 karakter');
+            }
+            
+            try {
+                // Konversi dari Base64 ke ArrayBuffer
+                const encryptedData = base64ToArrayBuffer(encryptedText);
+                const iv = encryptedData.slice(0, 16);
+                const data = encryptedData.slice(16);
+                
+                // Import kunci
+                const encoder = new TextEncoder();
+                const keyData = encoder.encode(key);
+                
+                const cryptoKey = await window.crypto.subtle.importKey(
+                    'raw',
+                    keyData,
+                    { name: 'AES-CBC' },
+                    false,
+                    ['decrypt']
+                );
+                
+                // Dekripsi data
+                const decrypted = await window.crypto.subtle.decrypt(
+                    {
+                        name: 'AES-CBC',
+                        iv: iv
+                    },
+                    cryptoKey,
+                    data
+                );
+                
+                return new TextDecoder().decode(decrypted);
+            } catch (error) {
+                throw new Error('Gagal mendekripsi: pastikan kunci dan IV benar');
+            }
+        }
+        
+        // Fungsi utilitas untuk konversi Base64 dan ArrayBuffer
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+        
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+        
+        // Fungsi untuk menyalin hasil
+        function copyResult(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Hasil berhasil disalin ke clipboard!');
+            }).catch(err => {
+                alert('Gagal menyalin: ' + err);
+            });
+        }
+        
+        // Fungsi untuk membersihkan input
+        function clearEncrypt() {
+            document.getElementById('encrypt-input').value = '';
+            document.getElementById('encrypt-result').textContent = '';
+        }
+        
+        function clearDecrypt() {
+            document.getElementById('decrypt-input').value = '';
+            document.getElementById('decrypt-result').textContent = '';
+        }
+        
+        // Fungsi untuk mengelola riwayat
+        function addToHistory(item) {
+            history.unshift(item);
+            if (history.length > 50) {
+                history.pop();
+            }
+            localStorage.setItem('encryptionHistory', JSON.stringify(history));
+            renderHistory();
+        }
+        
+        function renderHistory() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<p>Tidak ada riwayat</p>';
+                return;
+            }
+            
+            history.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                
+                const type = item.type === 'encrypt' ? 'Enkripsi' : 'Dekripsi';
+                const date = new Date(item.timestamp).toLocaleString();
+                
+                div.innerHTML = `
+                    <strong>${type} dengan ${item.algorithm}</strong>
+                    <small>${date}</small>
+                    <div style="margin-top: 5px;">
+                        <strong>Input:</strong> ${truncateText(item.input, 30)}
+                    </div>
+                    <div>
+                        <strong>Output:</strong> ${truncateText(item.output, 30)}
+                    </div>
+                    <button class="copy-btn" onclick="copyHistoryItem(${index})">Salin</button>
+                `;
+                
+                div.addEventListener('click', () => viewHistoryItem(index));
+                historyList.appendChild(div);
+            });
+        }
+        
+        function truncateText(text, maxLength) {
+            if (text.length > maxLength) {
+                return text.substring(0, maxLength) + '...';
+            }
+            return text;
+        }
+        
+        function viewHistoryItem(index) {
+            const item = history[index];
+            if (item.type === 'encrypt') {
+                switchTab('encrypt');
+                document.getElementById('encrypt-input').value = item.input;
+                document.getElementById('encrypt-result').textContent = item.output;
+                document.getElementById('encrypt-algorithm').value = item.algorithm;
+                updateEncryptOptions();
+            } else {
+                switchTab('decrypt');
+                document.getElementById('decrypt-input').value = item.input;
+                document.getElementById('decrypt-result').textContent = item.output;
+                document.getElementById('decrypt-algorithm').value = item.algorithm;
+                updateDecryptOptions();
+            }
+        }
+        
+        function copyHistoryItem(index) {
+            const item = history[index];
+            navigator.clipboard.writeText(item.output).then(() => {
+                alert('Hasil berhasil disalin ke clipboard!');
+            }).catch(err => {
+                alert('Gagal menyalin: ' + err);
+            });
+            
+            // Hentikan propagasi event agar tidak memicu viewHistoryItem
+            event.stopPropagation();
+        }
+        
+        function clearHistory() {
+            if (confirm('Apakah Anda yakin ingin menghapus semua riwayat?')) {
+                history = [];
+                localStorage.setItem('encryptionHistory', JSON.stringify(history));
+                renderHistory();
+            }
+        }
+        
+        // Fungsi untuk pengaturan
+        function loadSettings() {
+            document.getElementById('theme-select').value = settings.theme;
+            document.getElementById('save-history').checked = settings.saveHistory;
+            document.getElementById('auto-copy').checked = settings.autoCopy;
+        }
+        
+        function saveSettings() {
+            settings.theme = document.getElementById('theme-select').value;
+            settings.saveHistory = document.getElementById('save-history').checked;
+            settings.autoCopy = document.getElementById('auto-copy').checked;
+            
+            localStorage.setItem('appSettings', JSON.stringify(settings));
+            applyTheme(settings.theme);
+            
+            alert('Pengaturan berhasil disimpan!');
+        }
+        
+        function applyTheme(theme) {
+            const root = document.documentElement;
+            
+            switch(theme) {
+                case 'dark':
+                    root.style.setProperty('--light-color', '#212529');
+                    root.style.setProperty('--dark-color', '#f8f9fa');
+                    document.body.style.backgroundColor = '#121212';
+                    break;
+                    
+                case 'blue':
+                    root.style.setProperty('--primary-color', '#166088');
+                    root.style.setProperty('--secondary-color', '#4a6fa5');
+                    root.style.setProperty('--accent-color', '#4fc3f7');
+                    break;
+                    
+                case 'green':
+                    root.style.setProperty('--primary-color', '#28a745');
+                    root.style.setProperty('--secondary-color', '#218838');
+                    root.style.setProperty('--accent-color', '#5cb85c');
+                    break;
+                    
+                default: // light
+                    root.style.setProperty('--light-color', '#f8f9fa');
+                    root.style.setProperty('--dark-color', '#212529');
+                    document.body.style.backgroundColor = '#f5f5f5';
+            }
+        }
+    </script>
+</body>
+</html>
